@@ -1,1 +1,73 @@
+# Panduan Termux
 
+## 1. Pasang project
+
+Unduh dan jalankan installer:
+
+```sh
+pkg install -y curl
+curl -fsSL https://raw.githubusercontent.com/felinonino500-maker/golang-midleware/main/install-termux.sh -o install-termux.sh
+chmod +x install-termux.sh
+./install-termux.sh
+```
+
+Script memasang Git dan Go, clone repository ke
+`$HOME/golang-midleware`, lalu mengunduh module Go termasuk Firebase Admin SDK.
+
+## 2. Buat file service account privat
+
+Kunci service account yang pernah dibagikan harus dicabut di Google Cloud
+Console. Buat kunci pengganti setelah mencabutnya. Jangan kirim kunci ke chat,
+jangan masukkan ke Git, dan jangan taruh di folder project atau penyimpanan
+bersama.
+
+Buat direktori privat dan buka editor:
+
+```sh
+pkg install -y nano
+mkdir -p "$HOME/.config/firebase"
+chmod 700 "$HOME/.config/firebase"
+umask 077
+nano "$HOME/.config/firebase/service-account.json"
+```
+
+Tempel isi JSON service account pengganti langsung ke editor di perangkat
+Termux, lalu simpan (`Ctrl+O`, Enter) dan keluar (`Ctrl+X`). Setelah itu batasi
+izin file:
+
+```sh
+chmod 600 "$HOME/.config/firebase/service-account.json"
+```
+
+Jangan menaruh JSON di `golang-midleware/`. `.gitignore` mengabaikan beberapa
+pola nama key umum, tetapi menyimpan key di luar repository tetap pilihan yang
+lebih aman.
+
+## 3. Atur konfigurasi dan jalankan
+
+Ganti `AUTHORIZED_UIDS` dengan UID pengguna dari Firebase Authentication yang
+boleh mengakses API:
+
+```sh
+export GOOGLE_APPLICATION_CREDENTIALS="$HOME/.config/firebase/service-account.json"
+export FIREBASE_PROJECT_ID="bizflow-dashboard-vlo72"
+export RTDB_DATABASE_URL="https://bizflow-dashboard-vlo72-default-rtdb.asia-southeast1.firebasedatabase.app"
+export RTDB_PATH="firmware"
+export AUTHORIZED_UIDS="firebase-auth-uid-anda"
+export PORT="3000"
+
+cd "$HOME/golang-midleware"
+go run .
+```
+
+Jalankan perintah `export` lagi di sesi Termux baru. Untuk mengaturnya otomatis,
+tambahkan baris `export` tersebut ke `~/.bashrc` (jangan menaruh isi JSON key di
+dalamnya).
+
+Buka `http://127.0.0.1:3000/` di browser perangkat yang sama untuk melihat
+status koneksi RTDB dan Firestore. Halaman itu hanya melakukan pemeriksaan
+koneksi; halaman tersebut tidak menerima atau menyimpan service account.
+
+Untuk akses dari perangkat lain, gunakan alamat IP perangkat Termux dan
+pastikan firewall/jaringan mengizinkan port tersebut. Jangan mengekspos server
+ke internet tanpa HTTPS, pembatasan jaringan, dan pengamanan akses yang sesuai.
