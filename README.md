@@ -24,19 +24,8 @@ karena itu hanya UID yang diizinkan dapat menggunakan endpoint database.
 
   ### Instalasi di Termux
 
-  Unduh script lalu jalankan:
-
-  ```sh
-  pkg install -y curl
-  curl -fsSL https://raw.githubusercontent.com/felinonino500-maker/golang-midleware/main/install-termux.sh -o install-termux.sh
-  chmod +x install-termux.sh
-  ./install-termux.sh
-  ```
-
-  Script memasang Git dan Go, meng-clone repository ke
-  `$HOME/golang-midleware`, lalu mengunduh dependency Go termasuk Firebase Admin
-  SDK. Kredensial Google dan nilai `AUTHORIZED_UIDS` tetap perlu dikonfigurasi
-  sebelum server dapat mengakses Firebase.
+  Lihat [TERMUX.md](TERMUX.md) untuk instalasi, penyimpanan service account yang
+  aman, konfigurasi ADC, dan cara menjalankan server.
 
 ```sh
 cp .env.example .env
@@ -51,6 +40,9 @@ go run .
 
 `PORT` default ke `3000`. Endpoint `/healthz` tidak memerlukan token; semua
 endpoint data memerlukan header `Authorization: Bearer <Firebase ID token>`.
+Buka `http://localhost:3000/` (atau alamat server Anda) untuk melihat status
+koneksi RTDB dan Firestore. Pemeriksaan dilakukan dengan operasi baca dan hasil
+status di-cache selama 10 detik.
 
 ## Endpoint
 

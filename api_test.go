@@ -68,6 +68,18 @@ func TestHealthIsPublic(t *testing.T) {
 	}
 }
 
+func TestStatusPageIsPublic(t *testing.T) {
+	handler := newAPI(config{}, nil, nil, nil)
+	response := httptest.NewRecorder()
+	handler.ServeHTTP(response, httptest.NewRequest(http.MethodGet, "/", nil))
+	if response.Code != http.StatusOK {
+		t.Fatalf("status = %d, want %d", response.Code, http.StatusOK)
+	}
+	if got := response.Header().Get("Content-Type"); got != "text/html; charset=utf-8" {
+		t.Fatalf("Content-Type = %q, want HTML", got)
+	}
+}
+
 func TestValidRTDBSegment(t *testing.T) {
 	for _, segment := range []string{"", ".", "..", "a.b", "a#b", "a$b", "a[b", "a]b", "a\nb"} {
 		if validRTDBSegment(segment) {

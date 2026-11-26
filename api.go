@@ -7,6 +7,8 @@ import (
 	"io"
 	"net/http"
 	"strings"
+	"sync"
+	"time"
 	"unicode"
 	"unicode/utf8"
 
@@ -29,12 +31,17 @@ type api struct {
 	authClient tokenVerifier
 	rtdb       *db.Client
 	firestore  *firestore.Client
+	statusMu   sync.Mutex
+	status     firebaseStatus
+	checkedAt  time.Time
 }
 
 func newAPI(cfg config, authClient tokenVerifier, rtdb *db.Client, firestoreClient *firestore.Client) http.Handler {
 	a := &api{cfg: cfg, authClient: authClient, rtdb: rtdb, firestore: firestoreClient}
 	mux := http.NewServeMux()
 	mux.HandleFunc("GET /healthz", a.health)
+	mux.HandleFunc("GET /{$}", a.statusPage)
+	mux.HandleFunc("GET /status", a.firebaseStatus)
 	mux.HandleFunc("/api/rtdb", a.handleRTDB)
 	mux.HandleFunc("/api/rtdb/", a.handleRTDB)
 	mux.HandleFunc("/api/firestore/", a.handleFirestore)
@@ -43,7 +50,7 @@ func newAPI(cfg config, authClient tokenVerifier, rtdb *db.Client, firestoreClie
 
 func (a *api) requireToken(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		if r.URL.Path == "/healthz" {
+		if r.URL.Path == "/" || r.URL.Path == "/healthz" || r.URL.Path == "/status" {
 			next.ServeHTTP(w, r)
 			return
 		}
